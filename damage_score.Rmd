@@ -1,0 +1,150 @@
+---
+title: "report_score"
+author: "KUNIYOSHI Kouji"
+date: "2015年9月29日"
+output:
+  html_fragment:
+    self_contained: false
+    fragment: true
+    toc: true
+---
+
+``` {r setup, include = FALSE}
+library(knitr)
+library(plyr)
+library(outliers)
+opts_template$set(
+  silent = list(echo = FALSE)
+)
+```
+
+ダメージスコア係数を計算する
+============================
+
+下級妖魔のダメージスコア
+------------------------
+
+``` {r model_damage_score}
+read_damage_score <- function(type = "inferior") {
+  filename <- list(inferior     = "damage_score.inferior.tsv",
+                   intermediate = "damage_score.intermediate.tsv",
+                   superior     = "damage_score.superior.tsv")
+  sgs <- read.delim(filename[[type]], header = TRUE)
+  sgs <- sgs[complete.cases(sgs), ]
+  return(sgs)
+}
+
+glm.sgs <- function(data, degree) {
+  return(glm(Coef ~ poly(Level, degree = degree, raw = TRUE),
+             family = gaussian,
+             data = data))
+}
+
+model_damage_score <- function(sgs, n = 1) {
+  summarized <- ddply(sgs, .(Level), summarize, Coef = mean(DamageScore / Damage))
+  model <- glm.sgs(summarized, n)
+  coef.sgs <- coef(model)
+  fn.sgs <- function(damage, level) {
+    return(round(apply(sapply(level, "^", 0:n) * coef.sgs, 2, sum) * damage))
+  }
+  return(fn.sgs)
+}
+```
+
+``` {r damage_score_of_inferior}
+sgs.damage_score.inferior <- read_damage_score("inferior")
+resid.inferior <- abs(sgs.damage_score.inferior$DamageScore
+                      - model_damage_score(sgs.damage_score.inferior)(sgs.damage_score.inferior$Damage,
+                                                                      sgs.damage_score.inferior$Level))
+kable(data.frame(table(resid.inferior)))
+```
+
+だいたいは誤差なく当てはまっています。
+
+中級妖魔のダメージスコア
+------------------------
+
+``` {r damage_score_of_intermediate}
+sgs.damage_score.intermediate <- subset(read_damage_score("intermediate"),
+                                        Level < 150)
+resid.intermediate <- abs(sgs.damage_score.intermediate$DamageScore
+                      - model_damage_score(sgs.damage_score.intermediate, n = 3)(sgs.damage_score.intermediate$Damage,
+                                                                                 sgs.damage_score.intermediate$Level))
+kable(data.frame(table(resid.intermediate)))
+```
+
+上級妖魔のダメージスコア
+------------------------
+
+``` {r damage_score_of_superior}
+sgs.damage_score.superior <- subset(read_damage_score("superior"),
+                                    Level < 150)
+resid.superior <- abs(sgs.damage_score.superior$DamageScore
+                      - model_damage_score(sgs.damage_score.superior,
+                                           n = 3)(sgs.damage_score.superior$Damage,
+                                                  sgs.damage_score.superior$Level))
+plot(table(resid.superior), type = "h")
+```
+
+残差のヒストグラムをみると中級や初級と比べて当てはまりが悪くなっています。どこか間違っているところがありそうなので調べてみます。
+
+ダメージ係数を見てみましょう。
+
+``` {r damage_coef_of_superior}
+sgs.damage_score.superior.summarized <- ddply(sgs.damage_score.superior,
+                                              .(Level),
+                                              summarize,
+                                              Coef = mean(DamageScore / Damage))
+plot(sgs.damage_score.superior.summarized)
+```
+
+おおきく外れているのがひとつと、少し外れているのがひとつあります。
+
+どのデータが外れているのか調べてみます。
+
+``` {r search_outlier}
+sgs.outlier.level <- with(sgs.damage_score.superior.summarized,
+                          Level[Coef == outlier(Coef)])
+kable(subset(sgs.damage_score.superior,
+             Level > sgs.outlier.level - 3 & Level < sgs.outlier.level + 3))
+sgs.damage_score.superior <- subset(sgs.damage_score.superior,
+                                    Level != sgs.outlier.level)
+```
+
+ひとつだけダメージの桁が違っています。`r sgs.outlier.level`のダメージを記録するときに間違ってしまっているので、この外れ値は除外しました。
+
+``` {r damage_score_of_superior2}
+resid.superior <- abs(sgs.damage_score.superior$DamageScore
+                      - model_damage_score(sgs.damage_score.superior,
+                                           n = 3)(sgs.damage_score.superior$Damage,
+                                                  sgs.damage_score.superior$Level))
+kable(data.frame(table(resid.superior)))
+```
+
+まだ当てはまりが悪いので、もうひとつの外れ値も調べてみます。
+
+``` {r search_outlier2}
+sgs.damage_score.superior.summarized <- ddply(sgs.damage_score.superior,
+                                              .(Level),
+                                              summarize,
+                                              Coef = mean(DamageScore / Damage))
+sgs.outlier.level <- 1 + which.max(diff(sgs.damage_score.superior.summarized$Coef))
+kable(subset(sgs.damage_score.superior,
+             Level > sgs.outlier.level - 3 & Level < sgs.outlier.level + 3))
+sgs.damage_score.superior <- subset(sgs.damage_score.superior,
+                                    Level != sgs.outlier.level)
+```
+
+係数の差分が一番大きくなるのはレベルが`r sgs.outlier.level`のところです。ダメージが大きいのにダメージスコアが小さくなってしまっています。回帰の強みを生かしてこのレベルは除外してしまいましょう。
+
+``` {r damage_score_of_superior3}
+resid.superior <- abs(sgs.damage_score.superior$DamageScore
+                      - model_damage_score(sgs.damage_score.superior,
+                                           n = 3)(sgs.damage_score.superior$Damage,
+                                                  sgs.damage_score.superior$Level))
+plot(table(resid.superior), type = "h")
+```
+
+初級や中級に比べて残差が大きくなっていますが、これくらいならシミュレーションに使えそうです。
+
+シミュレーションは次回にします。

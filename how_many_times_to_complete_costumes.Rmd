@@ -1,0 +1,115 @@
+---
+title: "description"
+author: "KUNIYOSHI Kouji"
+date: "2015年9月27日"
+output:
+  html_fragment:
+    self_contained: false
+    toc: yes
+    flagment: true
+---
+
+``` {r setup, include = FALSE}
+library(knitr)
+library(plyr)
+library(ggplot2)
+opts_template$set(
+  silent = list(echo = FALSE)
+)
+```
+
+何回でコンプリートできるか
+==========================
+
+探索を一定回数するとコスチュームを貰えるステージがあります。全キャラクタ分のコスチュームを揃えるには何回の機会があればいいでしょうか。[クーポン収集問題](https://en.wikipedia.org/wiki/Coupon_collector%27s_problem)ですね。
+
+31人いる
+--------
+
+31人分のコスチュームを集めたいです。小難しい数式を見るのは後回しにして、簡単にシミュレーションしてみましょう。
+
+``` {r distribution_of_completion, cache = TRUE}
+sgs.member_count <- 31
+
+sim_count_to_complete <- function(n_different_costumes) {
+  generator <- function() { ceiling(runif(1, 0, n_different_costumes)) }
+  costume <- rep(0, n_different_costumes)
+  
+  while (sum(costume > 0) != n_different_costumes) {
+    new_costume <- generator()
+    costume[new_costume] <- costume[new_costume] + 1
+  }
+  
+  return(sum(costume))
+}
+
+sgs.completion_count <- sapply(rep(sgs.member_count, 10 * sgs.member_count ^ 2), sim_count_to_complete)
+
+plot(table(sgs.completion_count),
+     type = "h",
+     main = paste("Simulated To Complete All Costumes of", sgs.member_count, "Members"),
+     xlab = "Count to Complete",
+     ylab = "Frequency of the Count")
+```
+
+100ちょっとでピークがきているような気がしますね。
+
+``` {r summary_of_distribution, opts.label = "silent"}
+sgs.completion_count_summary <- data.frame(Mean = mean(sgs.completion_count),
+                                           Median = median(sgs.completion_count),
+                                           Mode = as.integer(names(which.max(table(sgs.completion_count)))),
+                                           Sd = sd(sgs.completion_count),
+                                           NinetyfivePercentile = quantile(sgs.completion_count, 0.95))
+
+knitr::kable(t(as.matrix(sgs.completion_count_summary)), col.names = "Value")
+```
+
+95パーセンタイルが`r sgs.completion_count_summary$NinetyfivePercentile`なのでよっぽど運が悪くなければ、`r sgs.completion_count_summary$NinetyfivePercentile`回でコンプリートできます。
+
+せっかく数式があるので同じになるかどうか確認してみましょう。
+
+``` {r simulation_vs_calculation}
+eulers_gamma <- function(n) sum(1/1:n) - log(n)
+sgs.calc_mean_of_completion_count <- function(n) n * log(n) + n * eulers_gamma(n) + 0.5
+sgs.sim_vs_calc <- data.frame(Category = c("simlation", "calculation"),
+                              E = c(sgs.completion_count_summary$Mean,
+                                    sgs.calc_mean_of_completion_count(sgs.member_count)),
+                              Var = c(sgs.completion_count_summary$Sd ^ 2,
+                                      pi ^ 2 / 6 * sgs.member_count ^ 2))
+knitr::kable(sgs.sim_vs_calc)
+```
+
+まぁ良さそうですね。
+
+メンバが増えるとどうなるか
+--------------------------
+
+前の節で`{r sgs.member_count}`人のメンバのときの分布を見てみました。今度はコンプリートにかかる回数がメンバの増減に合わせてどんな具合に変わるのかを見てみます。
+
+``` {r plot_completion_count, cache = TRUE}
+sgs.plot_completion_count <- function(max_members, sim_count = 10 * max_members ^ 2) {
+  count <- data.frame()
+  
+  for (i in 1:max_members) {
+    count_dist <- sapply(rep(i, sim_count), sim_count_to_complete)
+    count <- rbind(count,
+                   data.frame(Members = rep(i, sim_count),
+                              Count   = count_dist))
+  }
+
+  count <- ddply(count,
+                 .(Members),
+                 summarize,
+                 Median  = median(Count),
+                 FirstQu = quantile(Count, 0.25),
+                 ThirdQu = quantile(Count, 0.75))
+
+  gg <- ggplot(count, aes(x = Members, y = Median))
+  gg <- gg + geom_ribbon(aes(ymin = FirstQu, ymax = ThirdQu, alpha = 0.2)) + geom_line()
+  return(gg)
+}
+
+sgs.plot_completion_count(sgs.member_count + 5)
+```
+
+新チームが出てきて、新キャラが5人増えると`r sgs.calc_mean_of_completion_count(sgs.member_count + 5) / sgs.calc_mean_of_completion_count(sgs.member_count)`倍ですね。そんなに大変じゃなさそうです。

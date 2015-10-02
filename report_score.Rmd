@@ -1,0 +1,100 @@
+---
+title: "report_score"
+author: "KUNIYOSHI Kouji"
+date: "2015年9月29日"
+output:
+  html_fragment:
+    self_contained: false
+    toc: true
+    fragment: true
+---
+
+``` {r setup, include = FALSE}
+library(knitr)
+library(plyr)
+opts_template$set(
+  silent = list(echo = FALSE)
+)
+```
+
+レポートスコアを計算する
+========================
+
+下級妖魔のレポートスコア
+------------------------
+
+まずは下級妖魔のレーポトスコアの計算式を調べてみます。下級妖魔はレポートスコアにキャップがかかるのが早いので他の、中級や上級よりも簡単だと思います。
+
+``` {r report_score_of_inferior, opts.label = "silent"}
+sgs.report_score.inferior <- read.delim("report_score.inferior.tsv", header = TRUE)
+knitr::kable(head(sgs.report_score.inferior))
+```
+
+ここで試行錯誤があるんですが、結果のモデルを当てはめてみます。
+
+``` {r model_inferior}
+model.inferior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.inferior)
+coef.inferior <- coef(model.inferior)
+fn.inferior <- function(x) {
+  return(round(exp(coef.inferior[1] + coef.inferior[2] * x + coef.inferior[3] * x ^ 2 + coef.inferior[4] * x ^ 3)))
+}
+curve(fn.inferior,
+      min(sgs.report_score.inferior$Level),
+      max(sgs.report_score.inferior$Level),
+      main = "Inferior Calculation Function",
+      sub = paste("exp(", coef.inferior[1], "+", coef.inferior[2], "* x", coef.inferior[3], "* x ^ 2", coef.inferior[4], "* x ^ 3", ")"),
+      xlab = "Level",
+      ylab = "Report Score",
+      col = "blue")
+points(sgs.report_score.inferior$ReportScore)
+```
+
+残差平方和を見ると`r sum((sgs.report_score.inferior$ReportScore - fn.inferior(sgs.report_score.inferior$Level)) ^ 2)`なので精度は良さそうです。
+
+さっき、キャップがどうと書きましたが、実はこのレポートスコアというのはレベル50以降はずっとレベル50と同じスコアになります。なので、単にデータを読み上げる関数にすれば誤差はなくなってしまいます。データを全部集めてしまったので予測の余地がなくなってしまいました。
+
+中級妖魔のレポートスコア
+------------------------
+
+初級妖魔と変わらないので結果だけ図示します。
+
+``` {r model_intermediate, opts.label = "silent"}
+sgs.report_score.intermediate <- read.delim("report_score.intermediate.tsv", header = TRUE)
+model.intermediate <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.intermediate)
+coef.intermediate <- coef(model.intermediate)
+fn.intermediate <- function(x) {
+  return(round(exp(coef.intermediate[1] + coef.intermediate[2] * x + coef.intermediate[3] * x ^ 2 + coef.intermediate[4] * x ^ 3)))
+}
+curve(fn.intermediate,
+      min(sgs.report_score.intermediate$Level),
+      max(sgs.report_score.intermediate$Level),
+      main = "Intermediate Calculation Function",
+      sub = paste("exp(", coef.intermediate[1], "+", coef.intermediate[2], "* x", coef.intermediate[3], "* x ^ 2", coef.intermediate[4], "* x ^ 3", ")"),
+      xlab = "Level",
+      ylab = "Report Score",
+      col = "blue")
+points(sgs.report_score.intermediate$ReportScore)
+```
+
+上級妖魔のレポートスコア
+------------------------
+
+こちらも初級妖魔と変わらないので結果だけ図示します。
+
+``` {r model_superior, opts.label = "silent"}
+sgs.report_score.superior <- read.delim("report_score.superior.tsv", header = TRUE)
+model.superior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.superior)
+coef.superior <- coef(model.superior)
+fn.superior <- function(x) {
+  return(round(exp(coef.superior[1] + coef.superior[2] * x + coef.superior[3] * x ^ 2 + coef.superior[4] * x ^ 3)))
+}
+curve(fn.superior,
+      min(sgs.report_score.superior$Level),
+      max(sgs.report_score.superior$Level),
+      main = "Superior Calculation Function",
+      sub = paste("exp(", coef.superior[1], "+", coef.superior[2], "* x", coef.superior[3], "* x ^ 2", coef.superior[4], "* x ^ 3", ")"),
+      xlab = "Level",
+      ylab = "Report Score",
+      col = "blue")
+points(sgs.report_score.superior$ReportScore)
+```

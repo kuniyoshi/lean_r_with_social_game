@@ -1,0 +1,23 @@
+---
+title: "article"
+author: "KUNIYOSHI Kouji"
+date: "2015年10月2日"
+output:
+  html_fragment:
+    self_contained: false
+    toc: true
+    fragment: true
+---
+
+``` {r child = "how_many_times_combo_occuers.Rmd"}
+```
+
+``` {r child = "how_many_times_to_complete_costumes.Rmd"}
+```
+
+``` {r child = "report_score.Rmd"}
+```
+
+``` {r child = "damage_score.Rmd"}
+```
+
