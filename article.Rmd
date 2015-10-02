@@ -57,4 +57,4 @@ knitr::opts_chunk$set(fig.path = "learn_r/")
 
 ちょっと詰め込み過ぎてしまったかもしれません。これで協力戦イベントのスコアをシミュレーションする準備ができました。次はいよいよ、どの妖魔と戦うほうが効率がいいのか、ということのシミュレーションですが、これは次回にします。
 
-この記事は[R Markdown](http://rmarkdown.rstudio.com)を使って書いていて、コードは[github.com](https://github.com/kuniyoshi/lean_r_with_social_game)に上がっています。
+この記事は[R Markdown](http://rmarkdown.rstudio.com)を使って書いていて、コードは[github.com](https://github.com/kuniyoshi/learn_r_with_social_game)に上がっています。
