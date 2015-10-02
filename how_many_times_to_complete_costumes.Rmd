@@ -5,11 +5,11 @@ date: "2015年9月27日"
 output:
   html_fragment:
     self_contained: false
-    toc: yes
-    flagment: true
+    toc: true
+    fragment: true
 ---
 
-``` {r setup, include = FALSE}
+``` {r setup_costume, include = FALSE}
 library(knitr)
 library(plyr)
 library(ggplot2)
@@ -23,14 +23,16 @@ opts_template$set(
 
 探索を一定回数するとコスチュームを貰えるステージがあります。全キャラクタ分のコスチュームを揃えるには何回の機会があればいいでしょうか。[クーポン収集問題](https://en.wikipedia.org/wiki/Coupon_collector%27s_problem)ですね。
 
-31人いる
---------
+``` {r set_game_condition, include = FALSE}
+sgs.member_count <- 31
+```
 
-31人分のコスチュームを集めたいです。小難しい数式を見るのは後回しにして、簡単にシミュレーションしてみましょう。
+`r sgs.member_count`人いる
+--------------------------
+
+`r sgs.member_count`人分のコスチュームを集めたいです。小難しい数式を見るのは後回しにして、簡単にシミュレーションしてみましょう。
 
 ``` {r distribution_of_completion, cache = TRUE}
-sgs.member_count <- 31
-
 sim_count_to_complete <- function(n_different_costumes) {
   generator <- function() { ceiling(runif(1, 0, n_different_costumes)) }
   costume <- rep(0, n_different_costumes)
@@ -52,7 +54,7 @@ plot(table(sgs.completion_count),
      ylab = "Frequency of the Count")
 ```
 
-100ちょっとでピークがきているような気がしますね。
+100ちょっとでピークがきているような気がしますね。回数の統計量を見てみましょう。
 
 ``` {r summary_of_distribution, opts.label = "silent"}
 sgs.completion_count_summary <- data.frame(Mean = mean(sgs.completion_count),
@@ -63,6 +65,8 @@ sgs.completion_count_summary <- data.frame(Mean = mean(sgs.completion_count),
 
 knitr::kable(t(as.matrix(sgs.completion_count_summary)), col.names = "Value")
 ```
+
+`平均値` > `中央値` > `最頻値` になっています。平均値がたくさんの機会が必要だった運の悪いケースに引っ張られているのがわかります。
 
 95パーセンタイルが`r sgs.completion_count_summary$NinetyfivePercentile`なのでよっぽど運が悪くなければ、`r sgs.completion_count_summary$NinetyfivePercentile`回でコンプリートできます。
 
@@ -84,7 +88,7 @@ knitr::kable(sgs.sim_vs_calc)
 メンバが増えるとどうなるか
 --------------------------
 
-前の節で`{r sgs.member_count}`人のメンバのときの分布を見てみました。今度はコンプリートにかかる回数がメンバの増減に合わせてどんな具合に変わるのかを見てみます。
+前の節で`r sgs.member_count`人のメンバのときの分布を見てみました。今度はコンプリートにかかる回数がメンバの増減に合わせてどんな具合に変わるのかを見てみます。
 
 ``` {r plot_completion_count, cache = TRUE}
 sgs.plot_completion_count <- function(max_members, sim_count = 10 * max_members ^ 2) {

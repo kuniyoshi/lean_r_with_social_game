@@ -9,7 +9,7 @@ output:
     fragment: true
 ---
 
-``` {r setup, include = FALSE}
+``` {r setup_report_score, include = FALSE}
 library(knitr)
 library(plyr)
 opts_template$set(
@@ -17,26 +17,44 @@ opts_template$set(
 )
 ```
 
-レポートスコアを計算する
-========================
+敵＝妖魔（オブリ）は4種類いる
+=============================
 
-下級妖魔のレポートスコア
-------------------------
+- 下級妖魔
+- 中級妖魔
+- 上級妖魔
+- 超級妖魔
 
-まずは下級妖魔のレーポトスコアの計算式を調べてみます。下級妖魔はレポートスコアにキャップがかかるのが早いので他の、中級や上級よりも簡単だと思います。
+と種類がいます。それぞれでレポートスコアが違ってきますが、それぞれの妖魔にはまたレベルがあります。レベルによってもスコアが違ってきます。
 
-``` {r report_score_of_inferior, opts.label = "silent"}
+実際にプレイしてスコアを記録する
+================================
+
+ここは省略しますが、プレイ中に種類とレベルとスコアとを記録してきます。好きじゃないとできないことですね。
+
+記録したデータを見る
+====================
+
+努力が報われるときです。これは下級妖魔のレベルとレポートスコアとの関係を表しています。下級妖魔のレベルは50でキャップがかかるので50までを表示しています。
+
+``` {r plot_report_score_of_inferior, opts.label = "silent"}
 sgs.report_score.inferior <- read.delim("report_score.inferior.tsv", header = TRUE)
-knitr::kable(head(sgs.report_score.inferior))
+plot(sgs.report_score.inferior, main = "Inferior")
 ```
 
-ここで試行錯誤があるんですが、結果のモデルを当てはめてみます。
+ずいぶんと綺麗に曲線を描いています。スクストは誤差に乱数を使わない傾向があります。同じキャラが同じ敵に攻撃すると毎回同じダメージを与えます。ここでも誤差は入っていません。
+
+このデータは母集団を表しています。最低のレベルから最高のレベルまで全部のデータがあります。
+
+母集団のデータがあるので、この場合はいらないんですが、もっとRを使いたいので曲線で当てはめてみましょう。ここで試行錯誤があるんですが、結果のモデルを当てはめてみます。
 
 ``` {r model_inferior}
 model.inferior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.inferior)
 coef.inferior <- coef(model.inferior)
 fn.inferior <- function(x) {
-  return(round(exp(coef.inferior[1] + coef.inferior[2] * x + coef.inferior[3] * x ^ 2 + coef.inferior[4] * x ^ 3)))
+  return(round(predict(model.inferior,
+                       newdata = data.frame(Level = x),
+                       type = "response")))
 }
 curve(fn.inferior,
       min(sgs.report_score.inferior$Level),
@@ -49,21 +67,23 @@ curve(fn.inferior,
 points(sgs.report_score.inferior$ReportScore)
 ```
 
-残差平方和を見ると`r sum((sgs.report_score.inferior$ReportScore - fn.inferior(sgs.report_score.inferior$Level)) ^ 2)`なので精度は良さそうです。
+3次多項式で当てはめてみました。残差平方和を見ると`r sum((sgs.report_score.inferior$ReportScore - fn.inferior(sgs.report_score.inferior$Level)) ^ 2)`なので精度は良さそうです。
 
-さっき、キャップがどうと書きましたが、実はこのレポートスコアというのはレベル50以降はずっとレベル50と同じスコアになります。なので、単にデータを読み上げる関数にすれば誤差はなくなってしまいます。データを全部集めてしまったので予測の余地がなくなってしまいました。
+中級妖魔も3次多項式
+===================
 
-中級妖魔のレポートスコア
-------------------------
-
-初級妖魔と変わらないので結果だけ図示します。
+初級妖魔と変わらないので結果だけ図示します。中級妖魔の場合はレポートスコアがレベル99でキャップされてそれ以降は同じになります。
 
 ``` {r model_intermediate, opts.label = "silent"}
 sgs.report_score.intermediate <- read.delim("report_score.intermediate.tsv", header = TRUE)
-model.intermediate <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.intermediate)
+model.intermediate <- glm(ReportScore ~ poly(Level, 3, raw = TRUE),
+                          family = poisson,
+                          data = sgs.report_score.intermediate)
 coef.intermediate <- coef(model.intermediate)
 fn.intermediate <- function(x) {
-  return(round(exp(coef.intermediate[1] + coef.intermediate[2] * x + coef.intermediate[3] * x ^ 2 + coef.intermediate[4] * x ^ 3)))
+  return(round(predict(model.intermediate,
+                       newdata = data.frame(Level = x),
+                       type = "response")))
 }
 curve(fn.intermediate,
       min(sgs.report_score.intermediate$Level),
@@ -76,17 +96,23 @@ curve(fn.intermediate,
 points(sgs.report_score.intermediate$ReportScore)
 ```
 
-上級妖魔のレポートスコア
-------------------------
+残差平方和は`r sum((sgs.report_score.intermediate$ReportScore - fn.intermediate(sgs.report_score.intermediate$Level)) ^ 2)`なので精度は良さそうです。
 
-こちらも初級妖魔と変わらないので結果だけ図示します。
+上級妖魔のも3次多項式
+--------------------
+
+こちらも中級妖魔と変わらないので結果だけ図示します。
 
 ``` {r model_superior, opts.label = "silent"}
 sgs.report_score.superior <- read.delim("report_score.superior.tsv", header = TRUE)
-model.superior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE), family = poisson, data = sgs.report_score.superior)
+model.superior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE),
+                      family = poisson,
+                      data = sgs.report_score.superior)
 coef.superior <- coef(model.superior)
 fn.superior <- function(x) {
-  return(round(exp(coef.superior[1] + coef.superior[2] * x + coef.superior[3] * x ^ 2 + coef.superior[4] * x ^ 3)))
+  return(round(predict(model.superior,
+                       newdata = data.frame(Level = x),
+                       type = "response")))
 }
 curve(fn.superior,
       min(sgs.report_score.superior$Level),
@@ -98,3 +124,5 @@ curve(fn.superior,
       col = "blue")
 points(sgs.report_score.superior$ReportScore)
 ```
+
+残差平方和は`r sum((sgs.report_score.superior$ReportScore - fn.superior(sgs.report_score.superior$Level)) ^ 2)`なので精度は良さそうです。

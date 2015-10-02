@@ -5,29 +5,26 @@ date: "2015年9月27日"
 output: 
   html_fragment: 
     self_contained: false
-    flagment: true
     toc: yes
+    fragment: true
 ---
 
-``` {r setup, include = FALSE}
+``` {r setup_combo, include = FALSE}
 library(knitr)
 opts_template$set(
   silent = list(echo = FALSE)
 )
 ```
 
-マスタークラスのコンボ分布
-==========================
-
-概要
-----
+コンボしたい
+============
 
 マスタークラスになると対戦階級に応じてコンボ率アップのボーナスがあります。0%から50%までありますが、どれくらい攻撃力が違うのでしょうか。ここではコンボ率による攻撃力の違いを見ていきます。
 
-報酬一覧
---------
+データが公開されている
+======================
 
-まずは対戦階級毎のコンボ率ボーナスを見てみましょう。
+まずは対戦階級毎のコンボ率ボーナスを見てみましょう。これはゲーム内で公開されているデータです。
 
 ``` {r rank_buff, opts.label = "silent"}
 sgs.rank_buff <- data.frame(rank = factor(c("F", "E", "D", "C", "B", "A", "S", "SS", "SSS", "Ultimate!"), ordered = TRUE),
@@ -35,10 +32,12 @@ sgs.rank_buff <- data.frame(rank = factor(c("F", "E", "D", "C", "B", "A", "S", "
 knitr::kable(sgs.rank_buff, caption = "対戦階級別上昇コンボ率")
 ```
 
-攻撃回数分布
-------------
+しかし、このコンボ率の上昇ボーナスを見ても、与えるダメージがどれくらい大きくなるかわかりませんね。
 
-では実際にプレイしたときの攻撃回数にコンボを加えて見ましょう。
+コンボボーナスによるダメージ量の増加が知りたい
+==============================================
+
+ではプレイしたときの攻撃回数にコンボボーナスを加えてシミュレーションしてみましょう。
 
 ``` {r sim_attacks}
 sgs.sim_attacks <- function(simulation_count = 10,
@@ -77,3 +76,10 @@ plot(sgs.attack_count_distribution,
 対戦階級があがるにつれて攻撃回数が増えていっているのがわかります。チームのメンバーを6人として、2周分の攻撃機会があります。それぞれの機会でコンボが起きたり起きなかったります。1回のコンボ中に同じメンバーは1回だけなのでコンボ発生のレンジは0-5回になります。
 
 このシミュレーションでは対戦階級がFの場合は全くコンボが起きないことになっています。実際にはそんなことはないんですが、コンボ発生率の初期値を調べていないので0%としました。
+
+``` {r difference_between_f_and_b, include = FALSE}
+sgs.f_median <- median(subset(sgs.attack_count_distribution, rank == "F")$attacks)
+sgs.b_median <- median(subset(sgs.attack_count_distribution, rank == "B")$attacks)
+```
+
+ランクがFからBになると攻撃力が`r sgs.b_median / sgs.f_median`倍になります。
