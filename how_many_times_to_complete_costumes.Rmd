@@ -68,7 +68,7 @@ knitr::kable(t(as.matrix(sgs.completion_count_summary)), col.names = "Value")
 
 `平均値` > `中央値` > `最頻値` になっています。平均値がたくさんの機会が必要だった運の悪いケースに引っ張られているのがわかります。
 
-95パーセンタイルが`r sgs.completion_count_summary$NinetyfivePercentile`なのでよっぽど運が悪くなければ、`r sgs.completion_count_summary$NinetyfivePercentile`回でコンプリートできます。
+95パーセンタイルが`r sgs.completion_count_summary$NinetyfivePercentile`なのでよっぽど運が悪くなければ、`r sgs.completion_count_summary$NinetyfivePercentile`回以内でコンプリートできます。
 
 せっかく数式があるので同じになるかどうか確認してみましょう。
 
