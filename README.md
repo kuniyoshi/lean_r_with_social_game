@@ -25,3 +25,10 @@ article.Rmd を `Knit` します。そのあとブログ用に `script/seesaa_bl
 ``` bash
 $ perl script/seesaa_blog.pl article.html
 ```
+
+やりたいことと仕掛り中
+----------------------
+
+- 特訓期間のランキング予測
+- グループ戦のとき、自分のグループが最下位になるタイミングの予測
+- 対戦で得られる経験値の予測
