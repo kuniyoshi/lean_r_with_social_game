@@ -24,9 +24,9 @@ opts_template$set(
 
 ``` {r read_damage_score}
 read_damage_score <- function(type = "inferior") {
-  filename <- list(inferior     = "damage_score.inferior.tsv",
-                   intermediate = "damage_score.intermediate.tsv",
-                   superior     = "damage_score.superior.tsv")
+  filename <- list(inferior     = "../data/damage_score.inferior.tsv",
+                   intermediate = "../data/damage_score.intermediate.tsv",
+                   superior     = "../data/damage_score.superior.tsv")
   sgs <- read.delim(filename[[type]], header = TRUE)
   sgs <- sgs[complete.cases(sgs), ]
   return(sgs)

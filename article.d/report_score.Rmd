@@ -38,7 +38,7 @@ opts_template$set(
 努力が報われるときです。これは下級妖魔のレベルとレポートスコアとの関係を表しています。下級妖魔のレベルは50でキャップがかかるので50までを表示しています。
 
 ``` {r plot_report_score_of_inferior, opts.label = "silent"}
-sgs.report_score.inferior <- read.delim("report_score.inferior.tsv", header = TRUE)
+sgs.report_score.inferior <- read.delim("../data/report_score.inferior.tsv", header = TRUE)
 plot(sgs.report_score.inferior, main = "Inferior")
 ```
 
@@ -75,7 +75,7 @@ points(sgs.report_score.inferior$ReportScore)
 初級妖魔と変わらないので結果だけ図示します。中級妖魔の場合はレポートスコアがレベル99でキャップされてそれ以降は同じになります。
 
 ``` {r model_intermediate, opts.label = "silent"}
-sgs.report_score.intermediate <- read.delim("report_score.intermediate.tsv", header = TRUE)
+sgs.report_score.intermediate <- read.delim("../data/report_score.intermediate.tsv", header = TRUE)
 model.intermediate <- glm(ReportScore ~ poly(Level, 3, raw = TRUE),
                           family = poisson,
                           data = sgs.report_score.intermediate)
@@ -104,7 +104,7 @@ points(sgs.report_score.intermediate$ReportScore)
 こちらも中級妖魔と変わらないので結果だけ図示します。
 
 ``` {r model_superior, opts.label = "silent"}
-sgs.report_score.superior <- read.delim("report_score.superior.tsv", header = TRUE)
+sgs.report_score.superior <- read.delim("../data/report_score.superior.tsv", header = TRUE)
 model.superior <- glm(ReportScore ~ poly(Level, 3, raw = TRUE),
                       family = poisson,
                       data = sgs.report_score.superior)

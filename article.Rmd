@@ -25,7 +25,7 @@ knitr::opts_chunk$set(fig.path = "learn_r/")
 
 まずは準備運動で、クーポン収集問題についてみてみます。
 
-``` {r child = "how_many_times_to_complete_costumes.Rmd"}
+``` {r child = "article.d/how_many_times_to_complete_costumes.Rmd"}
 ```
 
 ---
@@ -34,7 +34,7 @@ knitr::opts_chunk$set(fig.path = "learn_r/")
 
 コンボボーナスで攻撃力が変わる様子を見てましょう。
 
-``` {r child = "how_many_times_combo_occuers.Rmd"}
+``` {r child = "article.d/how_many_times_combo_occuers.Rmd"}
 ```
 
 ---
@@ -43,14 +43,14 @@ knitr::opts_chunk$set(fig.path = "learn_r/")
 
 まずは、レポートスコアを見てみます。
 
-``` {r child = "report_score.Rmd"}
+``` {r child = "article.d/report_score.Rmd"}
 ```
 
 ---
 
 レポートスコアは実はデータを読み上げるだけでいい、という状態でしたが、次はダメージスコアについて見てみましょう。
 
-``` {r child = "damage_score.Rmd"}
+``` {r child = "article.d/damage_score.Rmd"}
 ```
 
 ---
